@@ -6,9 +6,12 @@
 //
 
 import Foundation
+import Dependencies
 import SwiftUI
 
 struct ReplyToExpandedPost: Respondable {
+    
+    @Dependency(\.commentRepository) var commentRepository
     
     var id: Int { post.id }
     let appState: AppState
@@ -18,15 +21,11 @@ struct ReplyToExpandedPost: Respondable {
     let commentTracker: CommentTracker
     
     func embeddedView() -> AnyView {
-        return AnyView(ExpandedPost(post: post)
+        return AnyView(LargePost(postView: post, isExpanded: true)
             .padding(.horizontal))
     }
     
     func sendResponse(responseContents: String) async throws {
-        try await postComment(to: post,
-                              commentContents: responseContents,
-                              commentTracker: commentTracker,
-                              account: appState.currentActiveAccount,
-                              appState: appState)
+        await commentRepository.postComment(content: responseContents, postId: post.post.id)
     }
 }

@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import Dependencies
 
 struct ContentView: View {
 
+    @Dependency(\.errorHandler) var errorHandler
+    
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var accountsTracker: SavedAccountTracker
 
@@ -51,7 +54,11 @@ struct ContentView: View {
                         .environment(\.symbolVariants, tabSelection == 5 ? .fill : .none)
                 }.tag(5)
         }
-        .onChange(of: appState.contextualError) { handle($0) }
+        .onChange(of: appState.contextualError) { handle($0) } // TODO: remove once all using `.errorHandler`
+        .onReceive(errorHandler.$alert) { errorAlert = $0 }
+        .onReceive(errorHandler.$sessionExpired) { expired in
+            if expired { expiredSessionAccount = appState.currentActiveAccount }
+        }
         .alert(using: $errorAlert) { content in
             Alert(
                 title: Text(content.title),
